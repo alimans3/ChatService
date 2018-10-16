@@ -1,6 +1,7 @@
 # ChatService
 ASP.NET Core Backend Web Application for a Chat Application
-
+## Installing
+Add Azure Connection String to appSettings.json
 This app service provides the following APIs:
 ## Usage
 ### Profile:
