@@ -57,7 +57,11 @@ namespace ChatService
             IConfiguration storageConfiguration = Configuration.GetSection("AzureStorageSettings");
             AzureStorageSettings storageSettings = new AzureStorageSettings();
             storageConfiguration.Bind(storageSettings);
-            storageSettings.ConnectionString = Environment.GetEnvironmentVariable("connectionString");
+            if (storageSettings.ConnectionString.Equals("EnterConnectionStringHere"))
+            {
+                storageSettings.ConnectionString = Environment.GetEnvironmentVariable("connectionString");
+            }
+
             return storageSettings;
         }
     }
