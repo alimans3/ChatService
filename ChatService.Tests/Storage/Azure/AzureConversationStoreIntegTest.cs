@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ChatService.Core.Exceptions;
 using ChatService.Core.Storage.Azure;
 using ChatService.DataContracts;
+using Microsoft.Extensions.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ChatService.Tests.Storage.Azure
@@ -13,7 +14,7 @@ namespace ChatService.Tests.Storage.Azure
     [TestCategory("Integration")]
     public class AzureConversationStoreIntegTest
     {
-        private const string connectionString = "DefaultEndpointsProtocol=https;AccountName=chatservicestorage1;AccountKey=Ngdwh4ENvLl9tGfEe5E1jK0ISk/hHc7WZf6lhibh32qsffc1InFA7m5yFoNVkcAKsIeDlhzipQJl57imAjNzdA==;EndpointSuffix=core.windows.net";
+        private string connectionString;
         private AzureConversationStore store;
         private Conversation testConversation;
         private Conversation testConversation1;
@@ -25,6 +26,7 @@ namespace ChatService.Tests.Storage.Azure
         [TestInitialize]
         public async Task TestInitialize()
         { 
+            connectionString = Environment.GetEnvironmentVariable("connectionString");
             testConversation = new Conversation(new List<string> {Guid.NewGuid().ToString(), Guid.NewGuid().ToString()});
             testMessage = new Message("Hola", testConversation.Participants[1]);
             testConversation1 = new Conversation(new List<string> {testConversation.Participants[0], Guid.NewGuid().ToString()});

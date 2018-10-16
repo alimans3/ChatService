@@ -16,8 +16,6 @@ namespace ChatService.FunctionalTests.Controllers
     [TestCategory("Integration")]
     public class ConversationIntegTest
     {
-        private HttpClient httpClient;
-        private TestServer testServer;
         private ChatServiceClient client;
         private AddConversationDto conversationDto1;
         private AddConversationDto conversationDto2;

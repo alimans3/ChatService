@@ -1,4 +1,5 @@
-﻿using ChatService.Core.Storage;
+﻿using System;
+using ChatService.Core.Storage;
 using ChatService.Core.Storage.Azure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -56,6 +57,7 @@ namespace ChatService
             IConfiguration storageConfiguration = Configuration.GetSection("AzureStorageSettings");
             AzureStorageSettings storageSettings = new AzureStorageSettings();
             storageConfiguration.Bind(storageSettings);
+            storageSettings.ConnectionString = Environment.GetEnvironmentVariable("connectionString");
             return storageSettings;
         }
     }

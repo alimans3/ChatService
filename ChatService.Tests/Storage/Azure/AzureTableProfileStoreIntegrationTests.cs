@@ -11,7 +11,7 @@ namespace ChatService.Tests.Storage.Azure
     [TestCategory("Integration")]
     public class AzureTableProfileStoreIntegrationTests
     {
-        private readonly string connectionString = Environment.GetEnvironmentVariable("ConnectionString"); 
+        private readonly string connectionString = Environment.GetEnvironmentVariable("connectionString"); 
         private AzureTableProfileStore store;
         private readonly UserProfile testProfile = new UserProfile(Guid.NewGuid().ToString(), "Nehme", "Bilal");
 
