@@ -11,7 +11,7 @@ namespace ChatService.Tests.Storage.Azure
     [TestCategory("Integration")]
     public class AzureTableProfileStoreIntegrationTests
     {
-        private const string connectionString = "DefaultEndpointsProtocol=https;AccountName=chatservicestorage1;AccountKey=Ngdwh4ENvLl9tGfEe5E1jK0ISk/hHc7WZf6lhibh32qsffc1InFA7m5yFoNVkcAKsIeDlhzipQJl57imAjNzdA==;EndpointSuffix=core.windows.net";
+        private readonly string connectionString = Environment.GetEnvironmentVariable("ConnectionString"); 
         private AzureTableProfileStore store;
         private readonly UserProfile testProfile = new UserProfile(Guid.NewGuid().ToString(), "Nehme", "Bilal");
 
