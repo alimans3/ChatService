@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using ChatService.Core.Exceptions;
 using ChatService.Core.Storage.Azure;
 using ChatService.DataContracts;
-using Microsoft.Extensions.Configuration;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace ChatService.Tests.Storage.Azure
@@ -25,8 +24,8 @@ namespace ChatService.Tests.Storage.Azure
 
         [TestInitialize]
         public async Task TestInitialize()
-        { 
-            connectionString = Environment.GetEnvironmentVariable("connectionString");
+        {
+            connectionString = TestMethodUnit.GetConnectionStringFromConfig();
             testConversation = new Conversation(new List<string> {Guid.NewGuid().ToString(), Guid.NewGuid().ToString()});
             testMessage = new Message("Hola", testConversation.Participants[1]);
             testConversation1 = new Conversation(new List<string> {testConversation.Participants[0], Guid.NewGuid().ToString()});

@@ -11,14 +11,14 @@ namespace ChatService.Tests.Storage.Azure
     [TestCategory("Integration")]
     public class AzureTableProfileStoreIntegrationTests
     {
-        private readonly string connectionString = Environment.GetEnvironmentVariable("connectionString"); 
+        private string connectionString; 
         private AzureTableProfileStore store;
         private readonly UserProfile testProfile = new UserProfile(Guid.NewGuid().ToString(), "Nehme", "Bilal");
 
         [TestInitialize]
         public async Task TestInitialize()
         {
-            
+            connectionString = TestMethodUnit.GetConnectionStringFromConfig();
             var table = new AzureCloudTable(connectionString, "TestTable");
             await table.CreateIfNotExistsAsync();
             store = new AzureTableProfileStore(table);

@@ -21,16 +21,12 @@ namespace ChatService.FunctionalTests.Controllers
     [TestCategory("Integration")]
     public class ProfileControllerIntegTests
     {
-        private HttpClient httpClient;
-        private TestServer server;
         private ChatServiceClient chatServiceClient;
 
         [TestInitialize]
         public void TestInitialize()
         {
-            server = new TestServer(WebHost.CreateDefaultBuilder().UseStartup<Startup>());
-            httpClient = server.CreateClient();
-            chatServiceClient = new ChatServiceClient(httpClient);
+            chatServiceClient = TestMethods.CreateTestServerAndClient();
         }
 
         [TestMethod]
