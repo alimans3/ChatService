@@ -1,3 +1,5 @@
+![alt text](https://aam75.visualstudio.com/ChatService_GitHub/_apis/build/status/GitHub%20MasterBuild)
+
 # ChatService
 ASP.NET Core Backend Web Application for a Chat Application
 ## Installing
