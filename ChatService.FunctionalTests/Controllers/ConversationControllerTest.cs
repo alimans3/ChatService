@@ -5,7 +5,7 @@ using ChatService.Controllers;
 using ChatService.Core.Exceptions;
 using ChatService.Core.Storage;
 using ChatService.DataContracts;
-using ChatService.FunctionalTests.TestUtils;
+using ChatService.FunctionalTests.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -33,7 +33,7 @@ namespace ChatService.FunctionalTests.Controllers
         {
             mockStore.Setup(store => store.GetConversationMessages(It.IsAny<string>()))
                      .ThrowsAsync(new StorageUnavailableException("Storage is unavailable!"));
-            TestMethods.AssertStatusCode(HttpStatusCode.ServiceUnavailable, await myController.Get("amansour_nbilal"));
+            TestUtils.AssertStatusCode(HttpStatusCode.ServiceUnavailable, await myController.Get("amansour_nbilal"));
         }
 
         [TestMethod]
@@ -41,7 +41,7 @@ namespace ChatService.FunctionalTests.Controllers
         {
             mockStore.Setup(store => store.GetConversationMessages(It.IsAny<string>()))
                      .ThrowsAsync(new Exception("Unknown Exception!"));
-            TestMethods.AssertStatusCode(HttpStatusCode.InternalServerError, await myController.Get("amansour_nbilal"));
+            TestUtils.AssertStatusCode(HttpStatusCode.InternalServerError, await myController.Get("amansour_nbilal"));
         }
 
         [TestMethod]
@@ -51,7 +51,7 @@ namespace ChatService.FunctionalTests.Controllers
                      .ThrowsAsync(new StorageUnavailableException("Storage is unavailable!"));
             var messageDto = new AddMessageDto("Hi!", "amansour");
             
-            TestMethods.AssertStatusCode(HttpStatusCode.ServiceUnavailable, await myController.Post("amansour_nbilal",messageDto));
+            TestUtils.AssertStatusCode(HttpStatusCode.ServiceUnavailable, await myController.Post("amansour_nbilal",messageDto));
         }
 
         [TestMethod]
@@ -61,7 +61,7 @@ namespace ChatService.FunctionalTests.Controllers
                      .ThrowsAsync(new Exception("Unknown Exception!"));
             AddMessageDto messageDto = new AddMessageDto("Hi!", "amansour");
 
-            TestMethods.AssertStatusCode(HttpStatusCode.InternalServerError, await myController.Post("amansour_nbilal", messageDto));
+            TestUtils.AssertStatusCode(HttpStatusCode.InternalServerError, await myController.Post("amansour_nbilal", messageDto));
         }
     }
 }

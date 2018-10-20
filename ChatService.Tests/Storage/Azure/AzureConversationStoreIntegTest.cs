@@ -22,10 +22,15 @@ namespace ChatService.Tests.Storage.Azure
         private Message testMessage;
         private Message testMessage1;
 
+        [ClassInitialize]
+        public async Task ClassInitialize()
+        {
+            connectionString = UnitTestsUtils.GetConnectionStringFromConfig();
+        }
+        
         [TestInitialize]
         public async Task TestInitialize()
         {
-            connectionString = TestMethodUnit.GetConnectionStringFromConfig();
             testConversation = new Conversation(new List<string> {Guid.NewGuid().ToString(), Guid.NewGuid().ToString()});
             testMessage = new Message("Hola", testConversation.Participants[1]);
             testConversation1 = new Conversation(new List<string> {testConversation.Participants[0], Guid.NewGuid().ToString()});

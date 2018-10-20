@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using ChatService.DataContracts;
-using ChatService.FunctionalTests.TestUtils;
+using ChatService.FunctionalTests.Utils;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.TestHost;
@@ -31,7 +31,7 @@ namespace ChatService.FunctionalTests.Controllers
         [TestInitialize]
         public void Initialize()
         {
-            client = TestMethods.CreateTestServerAndClient();
+            client = TestUtils.CreateTestServerAndClient();
             
             conversationDto1 = new AddConversationDto
             {

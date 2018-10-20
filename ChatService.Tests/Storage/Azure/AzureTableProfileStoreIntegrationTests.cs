@@ -15,10 +15,15 @@ namespace ChatService.Tests.Storage.Azure
         private AzureTableProfileStore store;
         private readonly UserProfile testProfile = new UserProfile(Guid.NewGuid().ToString(), "Nehme", "Bilal");
 
+        [ClassInitialize]
+        public async Task ClassInitialize()
+        {
+            connectionString = UnitTestsUtils.GetConnectionStringFromConfig();
+        }
+        
         [TestInitialize]
         public async Task TestInitialize()
         {
-            connectionString = TestMethodUnit.GetConnectionStringFromConfig();
             var table = new AzureCloudTable(connectionString, "TestTable");
             await table.CreateIfNotExistsAsync();
             store = new AzureTableProfileStore(table);

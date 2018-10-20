@@ -5,7 +5,7 @@ using ChatService.Controllers;
 using ChatService.Core.Exceptions;
 using ChatService.Core.Storage;
 using ChatService.DataContracts;
-using ChatService.FunctionalTests.TestUtils;
+using ChatService.FunctionalTests.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -40,7 +40,7 @@ namespace ChatService.FunctionalTests.Controllers
             IActionResult result = await profileController.CreateProfile(
                 createProfileDto);
 
-            TestMethods.AssertStatusCode(HttpStatusCode.ServiceUnavailable, result);
+            TestUtils.AssertStatusCode(HttpStatusCode.ServiceUnavailable, result);
         }
 
         [TestMethod]
@@ -52,7 +52,7 @@ namespace ChatService.FunctionalTests.Controllers
             var profileController = new ProfileController(profileStoreMock.Object, loggerMock.Object);
             IActionResult result = await profileController.CreateProfile(createProfileDto);
 
-            TestMethods.AssertStatusCode(HttpStatusCode.InternalServerError, result);
+            TestUtils.AssertStatusCode(HttpStatusCode.InternalServerError, result);
         }
 
         [TestMethod]
@@ -65,7 +65,7 @@ namespace ChatService.FunctionalTests.Controllers
             var profileController = new ProfileController(profileStoreMock.Object, loggerMock.Object);
             IActionResult result = await profileController.GetProfile(username);
 
-            TestMethods.AssertStatusCode(HttpStatusCode.ServiceUnavailable, result);
+            TestUtils.AssertStatusCode(HttpStatusCode.ServiceUnavailable, result);
         }
 
         [TestMethod]
@@ -78,7 +78,7 @@ namespace ChatService.FunctionalTests.Controllers
             var profileController = new ProfileController(profileStoreMock.Object, loggerMock.Object);
             IActionResult result = await profileController.GetProfile(username);
 
-            TestMethods.AssertStatusCode(HttpStatusCode.InternalServerError, result);
+            TestUtils.AssertStatusCode(HttpStatusCode.InternalServerError, result);
         }
 
         // fake exception used for testing internal server error

@@ -6,7 +6,7 @@ using ChatService.Controllers;
 using ChatService.Core.Exceptions;
 using ChatService.Core.Storage;
 using ChatService.DataContracts;
-using ChatService.FunctionalTests.TestUtils;
+using ChatService.FunctionalTests.Utils;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -36,7 +36,7 @@ namespace ChatService.FunctionalTests.Controllers
         {
             mockStore.Setup(store => store.GetConversations(It.IsAny<string>()))
                      .ThrowsAsync(new StorageUnavailableException("Storage is unavailable!"));
-            TestMethods.AssertStatusCode(HttpStatusCode.ServiceUnavailable,await myController.GetConversations("amansour"));
+            TestUtils.AssertStatusCode(HttpStatusCode.ServiceUnavailable,await myController.GetConversations("amansour"));
         }
 
         [TestMethod]
@@ -44,7 +44,7 @@ namespace ChatService.FunctionalTests.Controllers
         {
             mockStore.Setup(store => store.GetConversations(It.IsAny<string>()))
                      .ThrowsAsync(new Exception("Unknown Exception!"));
-            TestMethods.AssertStatusCode(HttpStatusCode.InternalServerError, await myController.GetConversations("amansour"));
+            TestUtils.AssertStatusCode(HttpStatusCode.InternalServerError, await myController.GetConversations("amansour"));
         }
 
         [TestMethod]
@@ -57,7 +57,7 @@ namespace ChatService.FunctionalTests.Controllers
                 Participants = new List<string>{ "amansour", "nbilal" } 
             };
 
-            TestMethods.AssertStatusCode(HttpStatusCode.ServiceUnavailable, await myController.AddConversation(conversationDto));
+            TestUtils.AssertStatusCode(HttpStatusCode.ServiceUnavailable, await myController.AddConversation(conversationDto));
         }
 
         [TestMethod]
@@ -69,7 +69,7 @@ namespace ChatService.FunctionalTests.Controllers
             {
                 Participants = new List<string> { "amansour", "nbilal" }
             };
-            TestMethods.AssertStatusCode(HttpStatusCode.InternalServerError, await myController.AddConversation(conversationDto));
+            TestUtils.AssertStatusCode(HttpStatusCode.InternalServerError, await myController.AddConversation(conversationDto));
         }
     }
 }
