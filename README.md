@@ -1,4 +1,5 @@
 ![alt text](https://aam75.visualstudio.com/ChatService_GitHub/_apis/build/status/GitHub%20MasterBuild)
+![alt text](https://aam75.vsrm.visualstudio.com/_apis/public/Release/badge/e3016cd0-189a-4aca-8603-e3b3bacfb83c/1/1)
 
 # ChatService
 ASP.NET Core Backend Web Application for a Chat Application
