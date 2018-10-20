@@ -45,3 +45,7 @@ This app service provides the following APIs:
 This API gives two ways of storage:
 * Azure Table Storage
 * InMemory Temporary Storage
+
+## Metrics:
+* Using Application Insights and EventFlow
+
