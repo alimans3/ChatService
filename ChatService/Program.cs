@@ -19,7 +19,7 @@ namespace ChatService
             {
                 ILoggerFactory loggerFactory = webHost.Services.GetRequiredService<ILoggerFactory>();
                 loggerFactory.AddEventFlow(pipeline);
-                webHost.Run();
+                webHost.Run(); 
             }
             
         }
