@@ -15,7 +15,7 @@ namespace ChatService.Controllers
     {
         private readonly IConversationStore store;
         private readonly ILogger<ConversationController> logger;
-
+        
         public ConversationController(IConversationStore store, ILogger<ConversationController> logger)
         {
             this.store = store;
@@ -27,6 +27,7 @@ namespace ChatService.Controllers
         [HttpGet("{conversationId}")]
         public async Task<IActionResult> Get(string conversationId)
         {
+            
             try
             {
                 var messages = await store.GetConversationMessages(conversationId); 
@@ -38,13 +39,16 @@ namespace ChatService.Controllers
             }
             catch (StorageUnavailableException e)
             {
-                logger.LogError(Events.StorageError,e, $"Storage was not available to obtain list of conversation messages for {conversationId}", DateTime.UtcNow);
+                logger.LogError(Events.StorageError, e,
+                    $"Storage was not available to obtain list of conversation messages for {conversationId}",
+                    DateTime.UtcNow);
                 return StatusCode(503, "Failed to reach Storage");
             }
             catch (Exception e)
             {
-                logger.LogError(Events.InternalError,e, $"Failed to obtain list of conversation messages for {conversationId}", DateTime.UtcNow);
-                return StatusCode(500, $"Failed to obtain list of conversation messages for { conversationId}");
+                logger.LogError(Events.InternalError, e,
+                    $"Failed to obtain list of conversation messages for {conversationId}", DateTime.UtcNow);
+                return StatusCode(500, $"Failed to obtain list of conversation messages for {conversationId}");
             }
         }
 

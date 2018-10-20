@@ -1,11 +1,13 @@
 ﻿using System;
 using ChatService.Core.Storage;
 using ChatService.Core.Storage.Azure;
+using ChatService.Core.Storage.Metrics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Metrics;
 
 namespace ChatService
 {
@@ -24,16 +26,24 @@ namespace ChatService
             services.AddOptions();
             
             
-            AzureStorageSettings azureStorageSettings = GetStorageSettings();
+            var azureStorageSettings = GetStorageSettings();
 
-            AzureCloudTable profileCloudTable = new AzureCloudTable(azureStorageSettings.ConnectionString, azureStorageSettings.ProfilesTableName);
-            AzureTableProfileStore profileStore = new AzureTableProfileStore(profileCloudTable);
-            AzureCloudTable messagesCloudTable = new AzureCloudTable(azureStorageSettings.ConnectionString, azureStorageSettings.MessagesTable);
-            AzureCloudTable userConversationsCloudTable = new AzureCloudTable(azureStorageSettings.ConnectionString, azureStorageSettings.UserConversationsTable);
-            AzureConversationStore conversationStore = new AzureConversationStore(messagesCloudTable,userConversationsCloudTable);
-            
-            services.AddSingleton<IProfileStore>(profileStore);
-            services.AddSingleton<IConversationStore>(conversationStore);
+            var profileCloudTable = new AzureCloudTable(azureStorageSettings.ConnectionString, azureStorageSettings.ProfilesTableName);
+            var profileStore = new AzureTableProfileStore(profileCloudTable);
+            var messagesCloudTable = new AzureCloudTable(azureStorageSettings.ConnectionString, azureStorageSettings.MessagesTable);
+            var userConversationsCloudTable = new AzureCloudTable(azureStorageSettings.ConnectionString, azureStorageSettings.UserConversationsTable);
+            var conversationStore = new AzureConversationStore(messagesCloudTable,userConversationsCloudTable);
+
+            services.AddSingleton<IMetricsClient>(context =>
+            {
+                var metricsClientFactory = new MetricsClientFactory(context.GetRequiredService<ILoggerFactory>(),
+                    TimeSpan.FromSeconds(15));
+                return metricsClientFactory.CreateMetricsClient<LoggerMetricsClient>();
+            });
+            services.AddSingleton<IProfileStore>(context =>
+                new ProfileStoreMetricDecorator(profileStore, context.GetRequiredService<IMetricsClient>()));
+            services.AddSingleton<IConversationStore>(context =>
+                new ConversationStoreMetricDecorator(conversationStore, context.GetRequiredService<IMetricsClient>()));
             services.AddLogging();
             services.AddMvc();
         }
