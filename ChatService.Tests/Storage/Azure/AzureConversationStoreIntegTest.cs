@@ -13,7 +13,7 @@ namespace ChatService.Tests.Storage.Azure
     [TestCategory("Integration")]
     public class AzureConversationStoreIntegTest
     {
-        private string connectionString;
+        private readonly string connectionString= UnitTestsUtils.GetConnectionStringFromConfig();
         private AzureConversationStore store;
         private Conversation testConversation;
         private Conversation testConversation1;
@@ -21,12 +21,6 @@ namespace ChatService.Tests.Storage.Azure
         private Conversation testConversation3;
         private Message testMessage;
         private Message testMessage1;
-
-        [ClassInitialize]
-        public async Task ClassInitialize()
-        {
-            connectionString = UnitTestsUtils.GetConnectionStringFromConfig();
-        }
         
         [TestInitialize]
         public async Task TestInitialize()
