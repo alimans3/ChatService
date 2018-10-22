@@ -149,11 +149,15 @@ namespace ChatService.Core.Storage.Azure
 
                 await messageTable.ExecuteAsync(insertOperation);
                 var entity = (UserConversationsIdRowEntity) result.Result;
-                var conversation = new Conversation(conversationId,
-                    new List<string> {entity.PartitionKey, entity.Recipient},
-                    entity.LastModifiedUtcTime);
+                
+                retrieveOperation =
+                    TableOperation.Retrieve<UserConversationsIdRowEntity>(entity.Recipient, conversationId);
+                var retrieveResult2 = await userConversationsTable.ExecuteAsync(retrieveOperation);
+                
+                var entity2 = (UserConversationsIdRowEntity) retrieveResult2.Result;
 
-                await UpdateConversationTime(conversation, message.UtcTime);
+                await UpdateConversationTime(entity2.RowKey,entity2.PartitionKey,entity2.LastModifiedUtcTime, message.UtcTime);
+                await UpdateConversationTime(entity.RowKey,entity.PartitionKey,entity.LastModifiedUtcTime, message.UtcTime);
                 return message;
             }
             catch (StorageException e)
@@ -334,18 +338,12 @@ namespace ChatService.Core.Storage.Azure
         /// <param name="conversation"></param>
         /// <param name="dateTime"></param>
         /// <returns></returns>
-        private async Task UpdateConversationTime(Conversation conversation, DateTime dateTime)
+        private async Task UpdateConversationTime(string conversationId, string senderUsername, DateTime currentDateTime , DateTime dateTime)
         {
-            var entity1 = await RetrieveConversationByTime(conversation.Participants[0],
-                ConversationUtils.FlipAndConvert(conversation.LastModifiedDateUtc));
-            var entity2 = await RetrieveConversationByTime(conversation.Participants[1],
-                ConversationUtils.FlipAndConvert(conversation.LastModifiedDateUtc));
-            var entity3 = await RetrieveConversationById(conversation.Participants[0],
-                conversation.Id);
-            var entity4 = await RetrieveConversationById(conversation.Participants[1],
-                conversation.Id);
+            var entity1 = await RetrieveConversationByTime(senderUsername, ConversationUtils.FlipAndConvert(currentDateTime));
+            var entity2 = await RetrieveConversationById(senderUsername,conversationId);
             
-            var updatedEntity1 = new UserConversationsTimeRowEntity
+            var updatedEntity = new UserConversationsTimeRowEntity
             {
                 Id = entity1.Id, 
                 PartitionKey = entity1.PartitionKey, 
@@ -353,33 +351,17 @@ namespace ChatService.Core.Storage.Azure
                 RowKey = ConversationUtils.FlipAndConvert(dateTime)
 
             };
-            var updatedEntity2 = new UserConversationsTimeRowEntity()
-            {
-                
-                Id = entity2.Id, 
-                PartitionKey = entity2.PartitionKey, 
-                Recipient = entity2.Recipient,
-                RowKey = ConversationUtils.FlipAndConvert(dateTime)
-
-            };
-            entity3.LastModifiedUtcTime = dateTime;
-            entity4.LastModifiedUtcTime = dateTime;
+            
+            entity2.LastModifiedUtcTime = dateTime;
             
             var operation1 = TableOperation.Delete(entity1);
-            var operation2 = TableOperation.Delete(entity2);
-            var operation3 = TableOperation.Replace(entity3);
-            var operation4 = TableOperation.Replace(entity4);
-            var operation5 = TableOperation.Insert(updatedEntity1);
-            var operation6 = TableOperation.Insert(updatedEntity2);
-            var task1 = userConversationsTable.ExecuteBatchAsync(new TableBatchOperation
+            var operation2 = TableOperation.Replace(entity2);
+            var operation3 = TableOperation.Insert(updatedEntity);
+            
+            await userConversationsTable.ExecuteBatchAsync(new TableBatchOperation
             {
-                operation1, operation3,operation5
+                operation1, operation2,operation3
             });
-            var task2 = userConversationsTable.ExecuteBatchAsync(new TableBatchOperation
-            {
-                operation2, operation4,operation6
-            });
-            await Task.WhenAll(task1, task2);
         }
         
     }
