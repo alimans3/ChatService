@@ -32,12 +32,12 @@ namespace ChatService.DataContracts
         
         public static string GenerateId(IEnumerable<string> participants)
         {
-            return string.Join("$%*@", participants.OrderBy(key => key));
+            return string.Join("$*@", participants.OrderBy(key => key));
         }
 
         public static List<string> ParseId(string Id)
         {
-            return Id.Split("$%*@").ToList();
+            return Id.Split("$*@").ToList();
         }
 
 
