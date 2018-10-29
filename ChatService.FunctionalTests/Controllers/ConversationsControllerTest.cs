@@ -8,6 +8,7 @@ using ChatService.Core.Storage;
 using ChatService.DataContracts;
 using ChatService.FunctionalTests.Utils;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Metrics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -20,6 +21,7 @@ namespace ChatService.FunctionalTests.Controllers
         Mock<IConversationStore> mockStore;
         private Mock<IProfileStore> profileStore;
         Mock<ILogger<ConversationsController>> mockLogger;
+        private Mock<IMetricsClient> mockClient;
         ConversationsController myController;
 
         [TestInitialize]
@@ -28,7 +30,8 @@ namespace ChatService.FunctionalTests.Controllers
             mockStore = new Mock<IConversationStore>();
             mockLogger = new Mock<ILogger<ConversationsController>>();
             profileStore=new Mock<IProfileStore>();
-            myController = new ConversationsController(mockStore.Object, mockLogger.Object,profileStore.Object);
+            mockClient = new Mock<IMetricsClient>();
+            myController = new ConversationsController(mockStore.Object,mockClient.Object, mockLogger.Object,profileStore.Object);
         }
 
         [TestMethod]

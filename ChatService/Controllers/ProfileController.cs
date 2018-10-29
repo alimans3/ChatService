@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using ChatService.Core;
 using ChatService.Core.Exceptions;
@@ -6,6 +7,7 @@ using ChatService.Core.Storage;
 using ChatService.DataContracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Metrics;
 
 namespace ChatService.Controllers
 {
@@ -14,16 +16,21 @@ namespace ChatService.Controllers
     {
         private readonly IProfileStore profileStore;
         private readonly ILogger<ProfileController> logger;
+        private readonly AggregateMetric PostProfileMetric;
+        private readonly AggregateMetric GetProfileMetric;
 
-        public ProfileController(IProfileStore profileStore, ILogger<ProfileController> logger)
+        public ProfileController(IProfileStore profileStore,IMetricsClient client, ILogger<ProfileController> logger)
         {
             this.profileStore = profileStore;
             this.logger = logger;
+            PostProfileMetric = client.CreateAggregateMetric("PostProfileTime");
+            GetProfileMetric = client.CreateAggregateMetric("GetProfileTime");
         }
 
         [HttpPost("")]
         public async Task<IActionResult> CreateProfile([FromBody] CreateProfileDto request)
         {
+            var stopWatch = Stopwatch.StartNew();
             var profile = new UserProfile(request.Username, request.FirstName, request.LastName);
             try
             {
@@ -52,12 +59,17 @@ namespace ChatService.Controllers
                 logger.LogError(Events.InternalError, e, "Failed to create a profile for user {username}", request.Username);
                 return StatusCode(500, "Failed to create profile");
             }
+            finally
+            {
+                PostProfileMetric.TrackValue(stopWatch.ElapsedMilliseconds);
+            }
             return Created(request.Username, profile);
         }
 
         [HttpGet("{username}")]
         public async Task<IActionResult> GetProfile(string username)
         {
+            var stopWatch = Stopwatch.StartNew();
             try
             {
                 UserProfile profile = await profileStore.GetProfile(username);
@@ -78,6 +90,10 @@ namespace ChatService.Controllers
             {
                 logger.LogError(e, "Error occured while retrieving a user profile");
                 return StatusCode(500, "Failed to retrieve profile of user {username}");
+            }
+            finally
+            {
+                GetProfileMetric.TrackValue(stopWatch.ElapsedMilliseconds);
             }
         }
     }

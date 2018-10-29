@@ -8,6 +8,7 @@ using ChatService.DataContracts;
 using ChatService.FunctionalTests.Utils;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Metrics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
@@ -23,6 +24,7 @@ namespace ChatService.FunctionalTests.Controllers
     {
         readonly Mock<IProfileStore> profileStoreMock = new Mock<IProfileStore>();
         readonly Mock<ILogger<ProfileController>> loggerMock = new Mock<ILogger<ProfileController>>();
+        Mock<IMetricsClient> mockClient = new Mock<IMetricsClient>();
         private CreateProfileDto createProfileDto = new CreateProfileDto
         {
             Username = "nbilal",
@@ -36,7 +38,7 @@ namespace ChatService.FunctionalTests.Controllers
             profileStoreMock.Setup(store => store.AddProfile(It.IsAny<UserProfile>()))
                 .ThrowsAsync(new StorageErrorException("Test Failure"));
 
-            var profileController = new ProfileController(profileStoreMock.Object, loggerMock.Object);
+            var profileController = new ProfileController(profileStoreMock.Object,mockClient.Object, loggerMock.Object);
             IActionResult result = await profileController.CreateProfile(
                 createProfileDto);
 
@@ -49,7 +51,7 @@ namespace ChatService.FunctionalTests.Controllers
             profileStoreMock.Setup(store => store.AddProfile(It.IsAny<UserProfile>()))
                 .ThrowsAsync(new UnknownException());
 
-            var profileController = new ProfileController(profileStoreMock.Object, loggerMock.Object);
+            var profileController = new ProfileController(profileStoreMock.Object,mockClient.Object, loggerMock.Object);
             IActionResult result = await profileController.CreateProfile(createProfileDto);
 
             TestUtils.AssertStatusCode(HttpStatusCode.InternalServerError, result);
@@ -62,7 +64,7 @@ namespace ChatService.FunctionalTests.Controllers
             profileStoreMock.Setup(store => store.GetProfile(username))
                 .ThrowsAsync(new StorageErrorException("Test Failure"));
 
-            var profileController = new ProfileController(profileStoreMock.Object, loggerMock.Object);
+            var profileController = new ProfileController(profileStoreMock.Object,mockClient.Object, loggerMock.Object);
             IActionResult result = await profileController.GetProfile(username);
 
             TestUtils.AssertStatusCode(HttpStatusCode.ServiceUnavailable, result);
@@ -75,7 +77,7 @@ namespace ChatService.FunctionalTests.Controllers
             profileStoreMock.Setup(store => store.GetProfile(username))
                 .ThrowsAsync(new UnknownException());
 
-            var profileController = new ProfileController(profileStoreMock.Object, loggerMock.Object);
+            var profileController = new ProfileController(profileStoreMock.Object,mockClient.Object, loggerMock.Object);
             IActionResult result = await profileController.GetProfile(username);
 
             TestUtils.AssertStatusCode(HttpStatusCode.InternalServerError, result);

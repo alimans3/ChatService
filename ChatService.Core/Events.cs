@@ -13,6 +13,9 @@ namespace ChatService.Core
         public static readonly EventId ConversationNotFound = CreateEvent(nameof(ConversationNotFound));
         public static readonly EventId MessageAdded = CreateEvent(nameof(MessageAdded));
         public static readonly EventId UsernameNotFound = CreateEvent(nameof(UsernameNotFound));
+        public static readonly EventId ConversationsRequested = CreateEvent(nameof(ConversationsRequested));
+        public static readonly EventId MessagesRequested = CreateEvent(nameof(MessagesRequested));
+        
 
         private static EventId CreateEvent(string eventName)
         {

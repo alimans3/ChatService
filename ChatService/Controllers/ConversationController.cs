@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using ChatService.Core;
@@ -7,6 +8,7 @@ using ChatService.Core.Storage;
 using ChatService.DataContracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Metrics;
 
 namespace ChatService.Controllers
 {
@@ -15,11 +17,15 @@ namespace ChatService.Controllers
     {
         private readonly IConversationStore store;
         private readonly ILogger<ConversationController> logger;
+        private readonly AggregateMetric PostMessageMetric;
+        private readonly AggregateMetric GetMessagesMetric;
         
-        public ConversationController(IConversationStore store, ILogger<ConversationController> logger)
+        public ConversationController(IConversationStore store, ILogger<ConversationController> logger,IMetricsClient client)
         {
             this.store = store;
             this.logger = logger;
+            PostMessageMetric = client.CreateAggregateMetric("PostMessageTime");
+            GetMessagesMetric = client.CreateAggregateMetric("GetMessageTime");
 
         }
 
@@ -27,13 +33,14 @@ namespace ChatService.Controllers
         [HttpGet("{conversationId}")]
         public async Task<IActionResult> Get(string conversationId)
         {
-            
+            var stopWatch = Stopwatch.StartNew();
             try
             {
                 var messages = await store.GetConversationMessages(conversationId); 
                 var converter = new Converter<Message, GetMessageDto>(message => new GetMessageDto(message));
                 var messageDtos = new GetMessagesListDto(messages.ConvertAll(converter));
-                logger.LogInformation($"Conversation messages for {conversationId} has been requested!", DateTime.UtcNow);
+                logger.LogInformation(Events.MessagesRequested,
+                    $"Conversation messages for {conversationId} has been requested!", DateTime.UtcNow);
                 return Ok(messageDtos);
 
             }
@@ -50,12 +57,17 @@ namespace ChatService.Controllers
                     $"Failed to obtain list of conversation messages for {conversationId}", DateTime.UtcNow);
                 return StatusCode(500, $"Failed to obtain list of conversation messages for {conversationId}");
             }
+            finally
+            {
+                GetMessagesMetric.TrackValue(stopWatch.ElapsedMilliseconds);
+            }
         }
 
         // POST api/conversation/5
         [HttpPost("{conversationId}")]
         public async Task<IActionResult> Post(string conversationId, [FromBody]AddMessageDto dto)
         {
+            var stopWatch = Stopwatch.StartNew();
             try
             {
                 var message = await store.AddMessage(conversationId, new Message(dto));
@@ -82,6 +94,10 @@ namespace ChatService.Controllers
             {
                 logger.LogError(Events.InternalError,e, $"Failed to send messages for {conversationId}", DateTime.UtcNow);
                 return StatusCode(500, $"Failed to send message");
+            }
+            finally
+            {
+                PostMessageMetric.TrackValue(stopWatch.ElapsedMilliseconds);
             }
 
         }
