@@ -97,7 +97,7 @@ namespace ChatService.Controllers
             }
             finally
             {
-                PostMessageMetric.TrackValue(stopWatch.ElapsedMilliseconds);
+                PostMessageMetric.TrackValue((double)stopWatch.ElapsedMilliseconds);
             }
 
         }

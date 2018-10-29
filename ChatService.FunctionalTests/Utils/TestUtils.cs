@@ -5,12 +5,22 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Metrics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 
 namespace ChatService.FunctionalTests.Utils
 {
     public class TestUtils
     {
+        public static IMetricsClient GenerateClient()
+        {
+            Mock<ILoggerFactory> factory =new Mock<ILoggerFactory>();
+            var metricsClientFactory = new MetricsClientFactory(factory.Object,
+                TimeSpan.FromSeconds(15));
+            return metricsClientFactory.CreateMetricsClient<LoggerMetricsClient>();
+        }
         public static void AssertStatusCode(HttpStatusCode statusCode, IActionResult actionResult)
         {
             Assert.IsTrue(actionResult is ObjectResult);

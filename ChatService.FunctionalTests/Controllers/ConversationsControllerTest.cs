@@ -21,7 +21,7 @@ namespace ChatService.FunctionalTests.Controllers
         Mock<IConversationStore> mockStore;
         private Mock<IProfileStore> profileStore;
         Mock<ILogger<ConversationsController>> mockLogger;
-        private Mock<IMetricsClient> mockClient;
+        private IMetricsClient mockClient;
         ConversationsController myController;
 
         [TestInitialize]
@@ -30,8 +30,8 @@ namespace ChatService.FunctionalTests.Controllers
             mockStore = new Mock<IConversationStore>();
             mockLogger = new Mock<ILogger<ConversationsController>>();
             profileStore=new Mock<IProfileStore>();
-            mockClient = new Mock<IMetricsClient>();
-            myController = new ConversationsController(mockStore.Object,mockClient.Object, mockLogger.Object,profileStore.Object);
+            mockClient = TestUtils.GenerateClient();
+            myController = new ConversationsController(mockStore.Object,mockClient, mockLogger.Object,profileStore.Object);
         }
 
         [TestMethod]
