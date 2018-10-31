@@ -9,7 +9,7 @@ namespace ChatService.Core.Utils
         /// flips the time and converts it to a string
         /// </summary>
         /// <param name="dateTime"></param>
-        public static string FlipAndConvert(DateTime dateTime)
+        public static string DateTimeToRowKey(DateTime dateTime)
         {
             return (DateTime.MaxValue.Ticks - dateTime.Ticks).ToString("d19");
         }
@@ -23,5 +23,6 @@ namespace ChatService.Core.Utils
         {
             return new DateTime(DateTime.MaxValue.Ticks - long.Parse(dateTime));
         }
+        
     }
 }

@@ -53,7 +53,7 @@ namespace ChatService.Tests.Storage.Azure
         [ExpectedException(typeof(StorageUnavailableException))]
         public async Task GetConversations_StorageIsUnavailable()
         {
-            await store.GetConversations("amansour");
+            await store.GetConversations("amansour",null,null,50);
         }
         
         [TestMethod]
@@ -81,7 +81,7 @@ namespace ChatService.Tests.Storage.Azure
         [ExpectedException(typeof(StorageUnavailableException))]
         public async Task GetConversationMessages_StorageUnavailable()
         {
-            await store.GetConversationMessages("foo");
+            await store.GetConversationMessages("foo",null,null,50);
         }
 
     }

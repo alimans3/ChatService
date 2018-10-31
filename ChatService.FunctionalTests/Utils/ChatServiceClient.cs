@@ -138,9 +138,14 @@ namespace ChatService.FunctionalTests.Utils
             
         }
         
-        public async Task<GetConversationsListDto> GetConversations(string username)
+        public async Task<GetConversationsListDto> GetConversations(string username,int limit = 50)
         {
-            var response = await client.GetAsync($"api/conversations/{username}");
+            return await GetConversationsFromUri($"api/conversations/{username}?limit={limit}");
+        }
+
+        public async Task<GetConversationsListDto> GetConversationsFromUri(string uri)
+        {
+            var response = await client.GetAsync(uri);
             if (!response.IsSuccessStatusCode)
             {
                 throw new ChatServiceException("Failed to retrieve conversations",response.ReasonPhrase,response.StatusCode);
@@ -163,12 +168,17 @@ namespace ChatService.FunctionalTests.Utils
                 throw new ChatServiceException("Failed to reach chat service", e, 
                     "Internal Server Error", HttpStatusCode.InternalServerError);
             }
-            
+
         }
         
-        public async Task<GetMessagesListDto> GetMessages(string id)
+        public async Task<GetMessagesListDto> GetMessages(string id,int limit = 50)
         {
-            var response = await client.GetAsync($"api/conversation/{id}");
+            return await GetMessagesFromUri($"api/conversation/{id}?limit={limit}");
+        }
+
+        public async Task<GetMessagesListDto> GetMessagesFromUri(string uri)
+        {
+            var response = await client.GetAsync(uri);
             if (!response.IsSuccessStatusCode)
             {
                 throw new ChatServiceException("Failed to retrieve messages",response.ReasonPhrase,response.StatusCode);
@@ -191,7 +201,7 @@ namespace ChatService.FunctionalTests.Utils
                 throw new ChatServiceException("Failed to reach chat service", e, 
                     "Internal Server Error", HttpStatusCode.InternalServerError);
             }
-           
         }
+        
     }
 }

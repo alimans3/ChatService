@@ -21,7 +21,7 @@ namespace ChatService
                 loggerFactory.AddEventFlow(pipeline);
                 webHost.Run(); 
             }
-            
+             
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args)

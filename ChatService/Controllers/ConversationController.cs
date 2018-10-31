@@ -1,10 +1,11 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using ChatService.Core;
 using ChatService.Core.Exceptions;
 using ChatService.Core.Storage;
+using ChatService.Core.Utils;
 using ChatService.DataContracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -31,16 +32,20 @@ namespace ChatService.Controllers
 
         // GET api/conversation/5
         [HttpGet("{conversationId}")]
-        public async Task<IActionResult> Get(string conversationId)
+        public async Task<IActionResult> Get(string conversationId,string startCt,string endCt,int limit = 50)
         {
             using (logger.BeginScope("This log is for {conversationId}",conversationId))
             {
                 var stopWatch = Stopwatch.StartNew();
                 try
                 {
-                    var messages = await store.GetConversationMessages(conversationId);
+                    var resultMessages = await store.GetConversationMessages(conversationId,  startCt, endCt, limit);
                     var converter = new Converter<Message, GetMessageDto>(message => new GetMessageDto(message));
-                    var messageDtos = new GetMessagesListDto(messages.ConvertAll(converter));
+                    var nextUri =NextMessagesUri(conversationId, resultMessages.StartCt, limit);
+                    var previousUri =PreviousMessagesUri(conversationId, resultMessages.EndCt, limit);
+                    
+                    var messageDtos = new GetMessagesListDto(resultMessages.Messages.ConvertAll(converter), nextUri,
+                        previousUri);
                     logger.LogInformation(Events.MessagesRequested,
                         $"Conversation messages for {conversationId} has been requested!", DateTime.UtcNow);
                     return Ok(messageDtos);
@@ -110,7 +115,26 @@ namespace ChatService.Controllers
             }
 
         }
+        
+        public static string NextMessagesUri(string conversationId, string startCt, int limit)
+        {
+            if (string.IsNullOrWhiteSpace(startCt))
+            {
+                return "";
+            }
 
+            return $"/api/conversation/{conversationId}?startCt={startCt}&limit={limit}";
+        }
+
+        public static string PreviousMessagesUri(string conversationId, string endCt, int limit)
+        {
+            if (string.IsNullOrWhiteSpace(endCt))
+            {
+                return "";
+            }
+
+            return $"/api/conversation/{conversationId}?endCt={endCt}&limit={limit}";
+        }
        
     }
 }

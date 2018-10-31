@@ -37,17 +37,19 @@ namespace ChatService.FunctionalTests.Controllers
         [TestMethod]
         public async Task GetConversationsReturns503IfStorageUnavailable()
         {
-            mockStore.Setup(store => store.GetConversations(It.IsAny<string>()))
+            mockStore.Setup(store => store.GetConversations(It.IsAny<string>(),It.IsAny<string>(),It.IsAny<string>(),50))
                      .ThrowsAsync(new StorageUnavailableException("Storage is unavailable!"));
-            TestUtils.AssertStatusCode(HttpStatusCode.ServiceUnavailable,await myController.GetConversations("amansour"));
+            TestUtils.AssertStatusCode(HttpStatusCode.ServiceUnavailable,
+                await myController.GetConversations("amansour", "11", "11", 50));
         }
 
         [TestMethod]
         public async Task GetConversationsReturns500IfUnknownException()
         {
-            mockStore.Setup(store => store.GetConversations(It.IsAny<string>()))
+            mockStore.Setup(store => store.GetConversations(It.IsAny<string>(),It.IsAny<string>(),It.IsAny<string>(),50))
                      .ThrowsAsync(new Exception("Unknown Exception!"));
-            TestUtils.AssertStatusCode(HttpStatusCode.InternalServerError, await myController.GetConversations("amansour"));
+            TestUtils.AssertStatusCode(HttpStatusCode.InternalServerError,
+                await myController.GetConversations("amansour", "11", "11", 50));
         }
 
         [TestMethod]

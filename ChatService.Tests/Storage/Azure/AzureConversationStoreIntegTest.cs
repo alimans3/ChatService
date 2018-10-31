@@ -19,18 +19,22 @@ namespace ChatService.Tests.Storage.Azure
         private Conversation testConversation1;
         private Conversation testConversation2;
         private Conversation testConversation3;
+        private Conversation testConversation4;
         private Message testMessage;
         private Message testMessage1;
+        private Message testMessage2;
         
         [TestInitialize]
         public async Task TestInitialize()
         {
             testConversation = new Conversation(new List<string> {Guid.NewGuid().ToString(), Guid.NewGuid().ToString()});
             testMessage = new Message("Hola", testConversation.Participants[1]);
+            
             testConversation1 = new Conversation(new List<string> {testConversation.Participants[0], Guid.NewGuid().ToString()});
             testConversation2 = new Conversation(new List<string> {Guid.NewGuid().ToString(), Guid.NewGuid().ToString()});
             testConversation3 = new Conversation(new List<string>
                 {testConversation.Participants[0], testConversation.Participants[1]});
+            testConversation4 = new Conversation(new List<string> {testConversation.Participants[0], Guid.NewGuid().ToString()});
             testMessage1 = new Message("Hi", testConversation.Participants[0]);
             
             var messageTable = new AzureCloudTable(connectionString, "TestMessageTable");
@@ -38,6 +42,7 @@ namespace ChatService.Tests.Storage.Azure
             await messageTable.CreateIfNotExistsAsync();
             await userConversationsTable.CreateIfNotExistsAsync();
             store = new AzureConversationStore(messageTable,userConversationsTable);
+            testMessage2 = new Message("Hello", testConversation.Participants[1]);
         }
 
         [TestCleanup]
@@ -58,11 +63,36 @@ namespace ChatService.Tests.Storage.Azure
             await store.AddConversation(testConversation);
             await store.AddConversation(testConversation1);
             await store.AddConversation(testConversation2);
-            var conversations = await store.GetConversations(testConversation.Participants[0]);
-            Assert.AreEqual(2, conversations.Count);
-            CollectionAssert.AreEquivalent(testConversation1.Participants, conversations[0].Participants);
-            CollectionAssert.AreEquivalent(testConversation.Participants, conversations[1].Participants);
-       
+            await store.AddConversation(testConversation4);
+            
+            var conversations = await store.GetConversations(testConversation.Participants[0],null,null,2);
+            Assert.AreEqual(2, conversations.Conversations.Count);
+            CollectionAssert.AreEquivalent(testConversation4.Participants, conversations.Conversations[0].Participants);
+            CollectionAssert.AreEquivalent(testConversation1.Participants, conversations.Conversations[1].Participants);
+
+            var PrevConversations =
+                await store.GetConversations(testConversation.Participants[0], null, conversations.EndCt, 1);
+            Assert.AreEqual(1, PrevConversations.Conversations.Count);
+            CollectionAssert.AreEquivalent(testConversation.Participants, PrevConversations.Conversations[0].Participants);
+
+            var PrevNullConversations =
+                await store.GetConversations(testConversation.Participants[0], null, PrevConversations.EndCt, 2);
+            Assert.AreEqual(0,PrevNullConversations.Conversations.Count);
+            Assert.AreEqual(null,PrevNullConversations.StartCt);
+            Assert.AreEqual(null,PrevNullConversations.EndCt);
+            
+            var NextConversations =
+                await store.GetConversations(testConversation.Participants[0], PrevConversations.StartCt, null, 2);
+            Assert.AreEqual(2, NextConversations.Conversations.Count);
+            CollectionAssert.AreEquivalent(testConversation4.Participants, NextConversations.Conversations[0].Participants);
+            CollectionAssert.AreEquivalent(testConversation1.Participants, NextConversations.Conversations[1].Participants);
+
+            var NextNullConversations = await store.GetConversations(testConversation.Participants[0],
+                NextConversations.StartCt, null, 2);
+            Assert.AreEqual(0,NextNullConversations.Conversations.Count);
+            Assert.AreEqual(null,NextNullConversations.StartCt);
+            Assert.AreEqual(null,NextNullConversations.EndCt);
+
         }
 
         [TestMethod]
@@ -93,7 +123,7 @@ namespace ChatService.Tests.Storage.Azure
         [ExpectedException(typeof(ArgumentNullException))]
         public async Task GetConversations_NullArgument()
         {
-            await store.GetConversations(null);
+            await store.GetConversations(null,null,null,50);
         }
 
         [TestMethod]
@@ -103,20 +133,36 @@ namespace ChatService.Tests.Storage.Azure
             await store.AddConversation(testConversation);
             await store.AddMessage(testConversation.Id, testMessage);
             await store.AddMessage(testConversation.Id, testMessage1);
-            var messages = await store.GetConversationMessages(testConversation.Id);
+            await store.AddMessage(testConversation.Id, testMessage2);
+            
+            var messages = await store.GetConversationMessages(testConversation.Id,null,null,2);
 
             //To delete conversation in cleanup
-            testConversation.LastModifiedDateUtc=testMessage1.UtcTime;
+            testConversation.LastModifiedDateUtc=testMessage2.UtcTime;
 
-            Assert.AreEqual(2, messages.Count);
-            Assert.AreEqual(testMessage1.Text, messages[0].Text);
-            Assert.AreEqual(testMessage1.SenderUsername, messages[0].SenderUsername);
-            Assert.AreEqual(testMessage1.UtcTime, messages[0].UtcTime);
-            Assert.AreEqual(testMessage.Text, messages[1].Text);
-            Assert.AreEqual(testMessage.SenderUsername, messages[1].SenderUsername);
-            Assert.AreEqual(testMessage.UtcTime, messages[1].UtcTime);
+            Assert.AreEqual(2, messages.Messages.Count);
+            Assert.AreEqual(testMessage2, messages.Messages[0]);
+            Assert.AreEqual(testMessage1, messages.Messages[1]);
             
-
+            var PrevMessages = await store.GetConversationMessages(testConversation.Id,null,messages.EndCt,1);
+            Assert.AreEqual(1, PrevMessages.Messages.Count);
+            Assert.AreEqual(testMessage, PrevMessages.Messages[0]);
+            
+            var PrevNullMessages = await store.GetConversationMessages(testConversation.Id,null,PrevMessages.EndCt,1);
+            Assert.AreEqual(0,PrevNullMessages.Messages.Count);
+            Assert.AreEqual(null,PrevNullMessages.StartCt);
+            Assert.AreEqual(null,PrevNullMessages.EndCt);
+            
+            var NextMessages = await store.GetConversationMessages(testConversation.Id,PrevMessages.StartCt,null,2);
+            Assert.AreEqual(2, NextMessages.Messages.Count);
+            Assert.AreEqual(testMessage2, NextMessages.Messages[0]);
+            Assert.AreEqual(testMessage1, NextMessages.Messages[1]);
+            
+            var nextNullMessages = await store.GetConversationMessages(testConversation.Id,NextMessages.StartCt,null,1);
+            Assert.AreEqual(0,nextNullMessages.Messages.Count);
+            Assert.AreEqual(null,nextNullMessages.StartCt);
+            Assert.AreEqual(null,nextNullMessages.EndCt);
+            
         }
 
         [TestMethod]
@@ -162,15 +208,14 @@ namespace ChatService.Tests.Storage.Azure
         [DataRow("")]
         public async Task GetConversationMessages_NullOrEmptyConversationId(string conversationId)
         {
-            await store.GetConversationMessages(conversationId);
+            await store.GetConversationMessages(conversationId,null,null,50);
         }
 
         [TestMethod]
         public async Task GetConversationMessages_NonExistingConversation()
         {
-            var messages = await store.GetConversationMessages("foo");
-            Assert.AreEqual(0, messages.Count);
-            CollectionAssert.AreEqual(new List<Message>(), messages);
+            var messages = await store.GetConversationMessages("foo",null,null,50);
+            Assert.AreEqual(0, messages.Messages.Count);
         }
 
     }

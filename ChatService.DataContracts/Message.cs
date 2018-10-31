@@ -29,5 +29,15 @@ namespace ChatService.DataContracts
         public string SenderUsername { get; }
         public DateTime UtcTime { get; }
 
+        public override bool Equals(object obj)
+        {
+            var message = obj as Message;
+            return message.Text == Text && message.SenderUsername == SenderUsername && message.UtcTime == UtcTime;
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 }

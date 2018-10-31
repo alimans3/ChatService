@@ -39,7 +39,5 @@ namespace ChatService.DataContracts
         {
             return Id.Split("$*@").ToList();
         }
-
-
     }
 }

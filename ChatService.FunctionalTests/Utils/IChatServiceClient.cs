@@ -18,10 +18,10 @@ namespace ChatService.FunctionalTests.Utils
 
         /// <param name="username"></param>
         /// <returns>Http Response and list of conversations if response is OK, null if not</returns>
-        Task<GetConversationsListDto> GetConversations(string username);
+        Task<GetConversationsListDto> GetConversations(string username,int limit);
         
         /// <param name="id"></param>
         /// <returns>Http Response and list of messages if response is OK, null if not</returns>
-        Task<GetMessagesListDto> GetMessages(string id);
+        Task<GetMessagesListDto> GetMessages(string id,int limit);
     }
 }

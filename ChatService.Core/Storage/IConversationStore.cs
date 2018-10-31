@@ -23,7 +23,7 @@ namespace ChatService.Core.Storage
         /// <exception cref="StorageUnavailableException">If storage cannot be reached</exception>
         /// <exception cref="ArgumentNullException">If the given conversation is null </exception>
 
-        Task<List<Conversation>> GetConversations(string userName);
+        Task<ResultConversations> GetConversations(string userName, string startCt, string endCt, int limit = 50);
         /// <summary>
         /// Adds a message to selected conversation
         /// </summary>
@@ -40,7 +40,7 @@ namespace ChatService.Core.Storage
         /// <exception cref="StorageUnavailableException">If storage cannot be reached</exception>
         /// <exception cref="ArgumentNullException">If the given conversation is null </exception>
 
-        Task<List<Message>> GetConversationMessages(string conversationId);
+        Task<ResultMessages> GetConversationMessages(string conversationId,string startCt,string endCt,int limit = 50);
 
 
        

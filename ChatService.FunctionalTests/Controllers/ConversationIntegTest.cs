@@ -20,11 +20,14 @@ namespace ChatService.FunctionalTests.Controllers
         private AddConversationDto conversationDto1;
         private AddConversationDto conversationDto2;
         private AddConversationDto conversationDto3;
+        private AddConversationDto conversationDto4;
         private AddMessageDto messageDto1;
         private AddMessageDto messageDto2;
         private AddMessageDto messageDto3;
+        private AddMessageDto messageDto4;
         private CreateProfileDto userProfile1;
         private CreateProfileDto userProfile2;
+        private CreateProfileDto userProfile3;
 
 
 
@@ -45,6 +48,11 @@ namespace ChatService.FunctionalTests.Controllers
             {
                 Participants = new List<string> {Guid.NewGuid().ToString(), Guid.NewGuid().ToString()}
             };
+            conversationDto4 = new AddConversationDto
+            {
+                Participants = new List<string> {conversationDto1.Participants[0], Guid.NewGuid().ToString()}
+            };
+            
             userProfile1 = new CreateProfileDto
             {
                 Username = conversationDto1.Participants[1],
@@ -57,10 +65,17 @@ namespace ChatService.FunctionalTests.Controllers
                 FirstName = Guid.NewGuid().ToString(),
                 LastName = Guid.NewGuid().ToString()
             };
+            userProfile3 = new CreateProfileDto
+            {
+                Username = conversationDto4.Participants[1],
+                FirstName = Guid.NewGuid().ToString(),
+                LastName = Guid.NewGuid().ToString()
+            };
             
             messageDto1 = new AddMessageDto("Hi!", conversationDto1.Participants[0]);
             messageDto2 = new AddMessageDto("Hello!", conversationDto1.Participants[1]);
             messageDto3 = new AddMessageDto("Hi!", "foo");
+            messageDto4 = new AddMessageDto("Kifak!", conversationDto1.Participants[1]);
         }
 
         [TestMethod]
@@ -77,15 +92,25 @@ namespace ChatService.FunctionalTests.Controllers
             await client.PostConversation(conversationDto1);
             await client.PostConversation(conversationDto2);
             await client.PostConversation(conversationDto3);
+            await client.PostConversation(conversationDto4);
             await client.CreateProfile(userProfile1);
             await client.CreateProfile(userProfile2);
+            await client.CreateProfile(userProfile3);
 
-            var convs = await client.GetConversations(conversationDto1.Participants[0]);
+            var convs = await client.GetConversations(conversationDto1.Participants[0],2);
+            Assert.AreEqual(2,convs.Conversations.Count);
+            Assert.AreEqual(conversationDto4.Participants[1],convs.Conversations[0].Recipient.Username);
+            Assert.AreEqual(conversationDto2.Participants[1],convs.Conversations[1].Recipient.Username);
             
+            var prevConvs = await client.GetConversationsFromUri(convs.PreviousUri);
+            Assert.AreEqual(1,prevConvs.Conversations.Count);
+            Assert.AreEqual(conversationDto1.Participants[1],prevConvs.Conversations[0].Recipient.Username);
             
-            Assert.AreEqual(conversationDto2.Participants[1],convs.Conversations[0].Recipient.Username);
-            Assert.AreEqual(conversationDto1.Participants[1],convs.Conversations[1].Recipient.Username);
-            Assert.IsTrue(convs.Conversations.Count == 2);
+            var nextConvs = await client.GetConversationsFromUri(prevConvs.NextUri);
+            Assert.AreEqual(2,nextConvs.Conversations.Count);
+            Assert.AreEqual(conversationDto4.Participants[1],nextConvs.Conversations[0].Recipient.Username);
+            Assert.AreEqual(conversationDto2.Participants[1],nextConvs.Conversations[1].Recipient.Username);
+            
         }
 
         [TestMethod]
@@ -105,13 +130,28 @@ namespace ChatService.FunctionalTests.Controllers
             
             await client.PostMessage(conv.Id, messageDto1);
             await client.PostMessage(conv.Id, messageDto2);
+            await client.PostMessage(conv.Id, messageDto4);
 
-            var messages = await client.GetMessages(conv.Id);
-            Assert.AreEqual("Hello!", messages.Messages[0].Text);
-            Assert.AreEqual(messageDto2.SenderUsername, messages.Messages[0].SenderUsername);
-            Assert.AreEqual("Hi!", messages.Messages[1].Text);
-            Assert.AreEqual(messageDto1.SenderUsername, messages.Messages[1].SenderUsername);
-           
+            
+            var messages = await client.GetMessages(conv.Id,2);
+            Assert.AreEqual(2,messages.Messages.Count);
+            Assert.AreEqual(messageDto4.Text, messages.Messages[0].Text);
+            Assert.AreEqual(messageDto4.SenderUsername, messages.Messages[0].SenderUsername);
+            Assert.AreEqual(messageDto2.Text, messages.Messages[1].Text);
+            Assert.AreEqual(messageDto2.SenderUsername, messages.Messages[1].SenderUsername);
+            
+            var prevMessages = await client.GetMessagesFromUri(messages.PreviousUri);
+            Assert.AreEqual(1,prevMessages.Messages.Count);
+            Assert.AreEqual(messageDto1.Text, prevMessages.Messages[0].Text);
+            Assert.AreEqual(messageDto1.SenderUsername, prevMessages.Messages[0].SenderUsername);
+            
+            var nextMessages = await client.GetMessagesFromUri(prevMessages.NextUri);
+            Assert.AreEqual(2,nextMessages.Messages.Count);
+            Assert.AreEqual(messageDto4.Text, nextMessages.Messages[0].Text);
+            Assert.AreEqual(messageDto4.SenderUsername, nextMessages.Messages[0].SenderUsername);
+            Assert.AreEqual(messageDto2.Text, nextMessages.Messages[1].Text);
+            Assert.AreEqual(messageDto2.SenderUsername, nextMessages.Messages[1].SenderUsername);
+            
         }
 
         [TestMethod]

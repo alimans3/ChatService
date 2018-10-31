@@ -27,8 +27,6 @@
     <Folder Include="Utils\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ChatService.Core\ChatService.Core.csproj" />
-    <ProjectReference Include="..\ChatService.DataContracts\ChatService.DataContracts.csproj" />
     <ProjectReference Include="..\ChatService\ChatService.csproj" />
   </ItemGroup>
 </Project>

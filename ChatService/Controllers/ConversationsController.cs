@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using ChatService.Core;
 using ChatService.Core.Exceptions;
 using ChatService.Core.Storage;
+using ChatService.Core.Utils;
 using ChatService.DataContracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -34,46 +35,48 @@ namespace ChatService.Controllers
 
         // GET api/conversations/{username}
         [HttpGet("{username}")]
-        public async Task<IActionResult> GetConversations(string username)
+        public async Task<IActionResult> GetConversations(string username,string startCt,string endCt,int limit = 50)
         {
-            using (logger.BeginScope("This log is for {username}", username))
+            var stopWatch = Stopwatch.StartNew();
+            try
             {
-                var stopWatch = Stopwatch.StartNew();
-                try
-                {
-                    var conversations = await store.GetConversations(username);
-                    var converter = new Converter<Conversation, GetConversationsDto>(
-                        conversation =>
-                        {
-                            var recipientUsername = GetConversationsDto.GetRecipient(username, conversation);
-                            var profile = profileStore.GetProfile(recipientUsername).Result;
-                            return new GetConversationsDto(conversation.Id, profile, conversation.LastModifiedDateUtc);
-                        });
-                    logger.LogInformation(Events.ConversationsRequested,
-                        $"Conversations for {username} has been requested!", DateTime.UtcNow);
-                    var conversationsDto = new GetConversationsListDto(conversations.ConvertAll(converter));
-                    return Ok(conversationsDto);
-
-                }
-                catch (StorageUnavailableException e)
-                {
-                    logger.LogError(Events.StorageError, e,
-                        $"Storage was not available to obtain list of conversations for {username}", DateTime.UtcNow);
-                    return StatusCode(503, "Failed to reach Storage");
-                }
-                catch (Exception e)
-                {
-                    logger.LogError(Events.InternalError, e, $"Failed to obtain list of conversations for {username}",
-                        DateTime.UtcNow);
-                    return StatusCode(500, $"Failed to obtain list of conversations for {username}");
-                }
-                finally
-                {
-                    GetConversationMetric.TrackValue(stopWatch.ElapsedMilliseconds);
-                }
+                var resultConversations = await store.GetConversations(username,startCt, endCt,limit);
+                var converter = new Converter<Conversation, GetConversationsDto>(
+                    conversation =>
+                    {
+                        var recipientUsername = GetConversationsDto.GetRecipient(username, conversation);
+                        var profile = profileStore.GetProfile(recipientUsername).Result;
+                        return new GetConversationsDto(conversation.Id, profile, conversation.LastModifiedDateUtc);
+                    });
+               
+                logger.LogInformation(Events.ConversationsRequested,
+                    $"Conversations for {username} has been requested!", DateTime.UtcNow);
+                var nextUri =NextConversationsUri(username, resultConversations.StartCt, limit);
+                var previousUri =PreviousConversationsUri(username, resultConversations.EndCt, limit);
+                
+                var conversationsDto =
+                    new GetConversationsListDto(resultConversations.Conversations.ConvertAll(converter), nextUri,
+                        previousUri);
+                return Ok(conversationsDto);
             }
-
-
+            catch (StorageUnavailableException e)
+            {
+                logger.LogError(Events.StorageError, e,
+                    $"Storage was not available to obtain list of conversations for {username}", DateTime.UtcNow);
+                return StatusCode(503, "Failed to reach Storage");
+            }
+            catch (Exception e)
+            {
+                logger.LogError(Events.InternalError, e, $"Failed to obtain list of conversations for {username}",
+                    DateTime.UtcNow);
+                return StatusCode(500, $"Failed to obtain list of conversations for {username}");
+            }
+            finally
+            {
+                GetConversationMetric.TrackValue(stopWatch.ElapsedMilliseconds);
+            }
+         
+            
         }
 
         // POST api/conversations
@@ -114,6 +117,28 @@ namespace ChatService.Controllers
                     PostConversationMetric.TrackValue(stopWatch.ElapsedMilliseconds);
                 }
             }
+        }
+        
+        public static string NextConversationsUri(string username,string startCt,int limit)
+        {
+
+            if (string.IsNullOrWhiteSpace(startCt))
+            {
+                return  "";
+            }
+
+            return  $"/api/conversations/{username}?startCt={startCt}&limit={limit}";
+
+        }
+
+        public static string PreviousConversationsUri(string username,string endCt,int limit)
+        {
+            if (string.IsNullOrWhiteSpace(endCt))
+            {
+                return "";
+            }
+
+            return $"/api/conversations/{username}?endCt={endCt}&limit={limit}";
         }
     }
 }
