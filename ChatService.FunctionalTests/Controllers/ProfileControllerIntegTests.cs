@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using ChatService.Client;
 using ChatService.DataContracts;
 using ChatService.FunctionalTests.Utils;
 using Microsoft.AspNetCore;

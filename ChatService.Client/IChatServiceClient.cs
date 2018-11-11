@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using ChatService.DataContracts;
 
-namespace ChatService.FunctionalTests.Utils
+namespace ChatService.Client
 {
     public interface IChatServiceClient
     {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using ChatService.DataContracts;
 using Newtonsoft.Json;
 
-namespace ChatService.FunctionalTests.Utils
+namespace ChatService.Client
 {
 
     public class ChatServiceClient : IChatServiceClient
@@ -202,6 +202,7 @@ namespace ChatService.FunctionalTests.Utils
                     "Internal Server Error", HttpStatusCode.InternalServerError);
             }
         }
+        
         
     }
 }

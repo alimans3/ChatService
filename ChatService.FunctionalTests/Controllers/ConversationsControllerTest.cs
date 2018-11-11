@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
+using ChatService.Client;
 using ChatService.Controllers;
 using ChatService.Core.Exceptions;
 using ChatService.Core.Storage;
@@ -21,6 +22,7 @@ namespace ChatService.FunctionalTests.Controllers
         Mock<IConversationStore> mockStore;
         private Mock<IProfileStore> profileStore;
         Mock<ILogger<ConversationsController>> mockLogger;
+        Mock<INotificationService> mockService;
         private IMetricsClient mockClient;
         ConversationsController myController;
 
@@ -29,9 +31,11 @@ namespace ChatService.FunctionalTests.Controllers
         {
             mockStore = new Mock<IConversationStore>();
             mockLogger = new Mock<ILogger<ConversationsController>>();
+            mockService = new Mock<INotificationService>();
             profileStore=new Mock<IProfileStore>();
             mockClient = TestUtils.GenerateClient();
-            myController = new ConversationsController(mockStore.Object,mockClient, mockLogger.Object,profileStore.Object);
+            myController = new ConversationsController(mockStore.Object, mockClient, mockLogger.Object,
+                profileStore.Object, mockService.Object);
         }
 
         [TestMethod]
@@ -70,6 +74,18 @@ namespace ChatService.FunctionalTests.Controllers
         {
             mockStore.Setup(store => store.AddConversation(It.IsAny<Conversation>()))
                      .ThrowsAsync(new Exception("Unknown Exception!"));
+            AddConversationDto conversationDto = new AddConversationDto
+            {
+                Participants = new List<string> { "amansour", "nbilal" }
+            };
+            TestUtils.AssertStatusCode(HttpStatusCode.InternalServerError, await myController.AddConversation(conversationDto));
+        }
+
+        [TestMethod]
+        public async Task AddConversationReturns500IfNotificationServiceDown()
+        {
+            mockService.Setup(service => service.SendNotification(It.IsAny<string>(), It.IsAny<Payload>()))
+                .ThrowsAsync(new ChatServiceException("test", "test", new HttpStatusCode()));
             AddConversationDto conversationDto = new AddConversationDto
             {
                 Participants = new List<string> { "amansour", "nbilal" }

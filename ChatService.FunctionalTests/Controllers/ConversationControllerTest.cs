@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Threading.Tasks;
+using ChatService.Client;
 using ChatService.Controllers;
 using ChatService.Core.Exceptions;
 using ChatService.Core.Storage;
@@ -19,6 +20,7 @@ namespace ChatService.FunctionalTests.Controllers
     {
         Mock<IConversationStore> mockStore;
         Mock<ILogger<ConversationController>> mockLogger;
+        Mock<INotificationService> mockService;
         IMetricsClient mockClient;
         ConversationController myController;
 
@@ -27,8 +29,9 @@ namespace ChatService.FunctionalTests.Controllers
         {
             mockStore = new Mock<IConversationStore>();
             mockLogger = new Mock<ILogger<ConversationController>>();
+            mockService= new Mock<INotificationService>();
             mockClient = TestUtils.GenerateClient();
-            myController = new ConversationController(mockStore.Object, mockLogger.Object,mockClient);
+            myController = new ConversationController(mockStore.Object, mockLogger.Object,mockClient,mockService.Object);
         }
 
         [TestMethod]
@@ -65,6 +68,16 @@ namespace ChatService.FunctionalTests.Controllers
             AddMessageDto messageDto = new AddMessageDto("Hi!", "amansour");
 
             TestUtils.AssertStatusCode(HttpStatusCode.InternalServerError, await myController.Post("amansour_nbilal", messageDto));
+        }
+        
+        [TestMethod]
+        public async Task AddMessageReturns500IfNotificationServiceDown()
+        {
+            mockService.Setup(service => service.SendNotification(It.IsAny<string>(), It.IsAny<Payload>()))
+                .ThrowsAsync(new ChatServiceException("test", "test", new HttpStatusCode()));
+            AddMessageDto messageDto = new AddMessageDto("Hi!", "amansour");
+            TestUtils.AssertStatusCode(HttpStatusCode.InternalServerError, await myController.Post("amansour_nbilal", messageDto));
+
         }
     }
 }

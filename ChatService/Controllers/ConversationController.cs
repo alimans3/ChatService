@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
+using ChatService.Client;
 using ChatService.Core;
 using ChatService.Core.Exceptions;
 using ChatService.Core.Storage;
@@ -18,13 +19,16 @@ namespace ChatService.Controllers
     {
         private readonly IConversationStore store;
         private readonly ILogger<ConversationController> logger;
+        private readonly INotificationService notificationService;
         private readonly AggregateMetric PostMessageMetric;
         private readonly AggregateMetric GetMessagesMetric;
-        
-        public ConversationController(IConversationStore store, ILogger<ConversationController> logger,IMetricsClient client)
+
+        public ConversationController(IConversationStore store, ILogger<ConversationController> logger,
+            IMetricsClient client, INotificationService notificationService)
         {
             this.store = store;
             this.logger = logger;
+            this.notificationService = notificationService;
             PostMessageMetric = client.CreateAggregateMetric("PostMessageTime");
             GetMessagesMetric = client.CreateAggregateMetric("GetMessageTime");
 
@@ -81,6 +85,7 @@ namespace ChatService.Controllers
                 try
                 {
                     var message = await store.AddMessage(conversationId, new Message(dto));
+                    await CreateMessagePayloadAndSend(conversationId, message);
                     logger.LogInformation(Events.MessageAdded, "Message Added Successfully", DateTime.UtcNow);
                     var messageDto = new GetMessageDto(message);
                     return Ok(messageDto);
@@ -135,6 +140,13 @@ namespace ChatService.Controllers
 
             return $"/api/conversation/{conversationId}?endCt={endCt}&limit={limit}";
         }
-       
+
+        private async Task CreateMessagePayloadAndSend(string conversationId,Message message)
+        {
+            var payload = new Payload(Payload.MessageType,conversationId,message.UtcTime);
+            var participants = Conversation.ParseId(conversationId);
+            await notificationService.SendNotification(participants[0], payload);
+            await notificationService.SendNotification(participants[1], payload);
+        }
     }
 }

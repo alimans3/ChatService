@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 
-namespace ChatService.FunctionalTests.Utils
+namespace ChatService.Client
 {
     [Serializable]
     public class ChatServiceException : Exception

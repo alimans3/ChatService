@@ -1,4 +1,5 @@
 ﻿using System;
+using ChatService.Client;
 using ChatService.Core.Storage;
 using ChatService.Core.Storage.Azure;
 using ChatService.Core.Storage.Metrics;
@@ -24,8 +25,9 @@ namespace ChatService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddOptions();
-            
-            
+
+            var notificationServiceUri = Configuration.GetSection("Microservices")["NotificationServiceUri"];
+            var notificationService = new NotificationService(new Uri(notificationServiceUri));
             var azureStorageSettings = GetStorageSettings();
 
             var profileCloudTable = new AzureCloudTable(azureStorageSettings.ConnectionString, azureStorageSettings.ProfilesTableName);
@@ -34,6 +36,7 @@ namespace ChatService
             var userConversationsCloudTable = new AzureCloudTable(azureStorageSettings.ConnectionString, azureStorageSettings.UserConversationsTable);
             var conversationStore = new AzureConversationStore(messagesCloudTable,userConversationsCloudTable);
 
+            services.AddSingleton<INotificationService>(notificationService);
             services.AddSingleton<IMetricsClient>(context =>
             {
                 var metricsClientFactory = new MetricsClientFactory(context.GetRequiredService<ILoggerFactory>(),

@@ -1,10 +1,15 @@
 using System;
 using System.Net;
 using System.Net.Http;
+using ChatService.Client;
+using ChatService.Core.Storage.Azure;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Hosting.Internal;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Metrics;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -50,12 +55,15 @@ namespace ChatService.FunctionalTests.Utils
  
             if (serviceUri == null)
             {
-                var server = new TestServer(WebHost.CreateDefaultBuilder().UseStartup<Startup>());
+                var builder = WebHost.CreateDefaultBuilder().UseStartup<Startup>().ConfigureTestServices(s =>
+                    s.AddSingleton<INotificationService>(new Mock<INotificationService>().Object));
+                var server = new TestServer(builder);
                 return new ChatServiceClient(server.CreateClient());
             }
  
             var httpClient = new HttpClient {BaseAddress = serviceUri};
             return new ChatServiceClient(httpClient);
         }
+
     }
 }

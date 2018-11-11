@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ChatService.Client\ChatService.Client.csproj" />
     <ProjectReference Include="..\ChatService.DataContracts\ChatService.DataContracts.csproj" />
   </ItemGroup>
 

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using ChatService.Client;
 using ChatService.Core;
 using ChatService.Core.Exceptions;
 using ChatService.Core.Storage;
@@ -19,15 +20,17 @@ namespace ChatService.Controllers
         private readonly IConversationStore store;
         private readonly ILogger<ConversationsController> logger;
         private readonly IProfileStore profileStore;
+        private readonly INotificationService notificationService;
         private readonly AggregateMetric PostConversationMetric;
         private readonly AggregateMetric GetConversationMetric;
 
         public ConversationsController(IConversationStore store, IMetricsClient client,
-            ILogger<ConversationsController> logger, IProfileStore profileStore)
+            ILogger<ConversationsController> logger, IProfileStore profileStore,INotificationService notificationService)
         {
             this.store = store;
             this.logger = logger;
             this.profileStore = profileStore;
+            this.notificationService = notificationService;
             PostConversationMetric = client.CreateAggregateMetric("PostConversationTime");
             GetConversationMetric = client.CreateAggregateMetric("GetConversationTime");
 
@@ -139,6 +142,13 @@ namespace ChatService.Controllers
             }
 
             return $"/api/conversations/{username}?endCt={endCt}&limit={limit}";
+        }
+        
+        private async Task CreateConversationPayloadAndSend(Conversation conversation)
+        {
+                var payload = new Payload(Payload.ConversationType,conversation.Id,conversation.LastModifiedDateUtc);
+                await notificationService.SendNotification(conversation.Participants[0], payload);
+                await notificationService.SendNotification(conversation.Participants[1], payload);
         }
     }
 }
