@@ -2,50 +2,27 @@
 ![alt text](https://aam75.vsrm.visualstudio.com/_apis/public/Release/badge/e3016cd0-189a-4aca-8603-e3b3bacfb83c/1/1)
 
 # ChatService
-ASP.NET Core Backend Web Application for a Chat Application
-## Installing
-Add Azure Connection String to appSettings.json
-This app service provides the following APIs:
-## Usage
-### Profile:
-#### Add new profile for users.
-* Use: api/profile 
-* Body: 
-  * firstname:
-  * lastname:
-  * username:
-
-#### Get existing profile.
-* Use: api/profile/{username}
-
-
-
-### Conversation:
-#### Add new conversation between participants
-* Use: api/conversations
-* Body: 
-  * participants:[user1,user2]
-
-#### Get All conversations for specific user
-* Use: api/conversations/{username}
-
-
-
-### Messages:
-#### Add a message to a conversation
-* Use: api/conversation
-* Body: 
-  * SenderUsername:
-  * Text:
-
-#### Get all messages for specific conversations
-* Use: api/conversation/{conversationId}
-
-## Storage:
-This API gives two ways of storage:
-* Azure Table Storage
-* InMemory Temporary Storage
-
-## Metrics:
-* Using Application Insights and EventFlow
-
+ASP.NET Core Back-end Service for a Chat Application written in C#.
+## It demonstrates knowledge of:
+* Microservices:
+  * Works with another SignalR Notification Service
+  * Notification Service is Open-Source (https://github.com/alimans3/ChatNotificationService)
+* Cloud No-SQL Storage:
+  * Works with Azure Table Storage.
+  * Tables Partitioned in efficient way.
+* Metrics and Logging:
+  * Uses EventFlow and Azure Application Insights to track performance and errors
+* Countinous Integration/Countinous Delivery:
+  * Uses Azure DevOps Pipelines for Build and Release to Azure Web Service
+* Testing:
+  * Includes MSTest projects that include unit and integration tests for the service.
+  * Has 100% coverage for controllers and stores.
+  * Uses coverlet and ReportGenerator for Code Coverage.
+* Version Control:
+  * Project is open-source and available on GitHub.
+* RESTful APIs:
+  * Provides clear APIs for profiles, messages, and conversations.
+  * Supports Paging
+* Front-End:
+  * I have built a naive Xamarin Forms mobile chat application for testing.
+  * It is open-source (https://github.com/alimans3/ChatApplication)
