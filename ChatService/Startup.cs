@@ -27,7 +27,7 @@ namespace ChatService
             services.AddOptions();
 
             var notificationServiceUri = Configuration.GetSection("Microservices")["NotificationServiceUri"];
-            var notificationService = new NotificationService(new Uri(notificationServiceUri));
+            var notificationService = new NotificationServiceClient(new Uri(notificationServiceUri));
             var azureStorageSettings = GetStorageSettings();
 
             var profileCloudTable = new AzureCloudTable(azureStorageSettings.ConnectionString, azureStorageSettings.ProfilesTableName);
@@ -36,7 +36,7 @@ namespace ChatService
             var userConversationsCloudTable = new AzureCloudTable(azureStorageSettings.ConnectionString, azureStorageSettings.UserConversationsTable);
             var conversationStore = new AzureConversationStore(messagesCloudTable,userConversationsCloudTable);
 
-            services.AddSingleton<INotificationService>(notificationService);
+            services.AddSingleton<INotificationServiceClient>(notificationService);
             services.AddSingleton<IMetricsClient>(context =>
             {
                 var metricsClientFactory = new MetricsClientFactory(context.GetRequiredService<ILoggerFactory>(),

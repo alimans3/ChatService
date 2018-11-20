@@ -11,6 +11,7 @@ using ChatService.DataContracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Metrics;
+using Newtonsoft.Json;
 
 namespace ChatService.Controllers
 {
@@ -19,12 +20,12 @@ namespace ChatService.Controllers
     {
         private readonly IConversationStore store;
         private readonly ILogger<ConversationController> logger;
-        private readonly INotificationService notificationService;
+        private readonly INotificationServiceClient notificationService;
         private readonly AggregateMetric PostMessageMetric;
         private readonly AggregateMetric GetMessagesMetric;
 
         public ConversationController(IConversationStore store, ILogger<ConversationController> logger,
-            IMetricsClient client, INotificationService notificationService)
+            IMetricsClient client, INotificationServiceClient notificationService)
         {
             this.store = store;
             this.logger = logger;
@@ -143,10 +144,10 @@ namespace ChatService.Controllers
 
         private async Task CreateMessagePayloadAndSend(string conversationId,Message message)
         {
-            var payload = new Payload(Payload.MessageType,conversationId,message.UtcTime);
+            var notification = new MessageAddedNotification(conversationId,message.UtcTime);
             var participants = Conversation.ParseId(conversationId);
-            await notificationService.SendNotification(participants[0], payload);
-            await notificationService.SendNotification(participants[1], payload);
+            var notificationDto = new NotificationDto(participants,JsonConvert.SerializeObject(notification));
+            await notificationService.SendNotification(notificationDto);
         }
     }
 }

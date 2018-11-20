@@ -20,7 +20,7 @@ namespace ChatService.FunctionalTests.Controllers
     {
         Mock<IConversationStore> mockStore;
         Mock<ILogger<ConversationController>> mockLogger;
-        Mock<INotificationService> mockService;
+        Mock<INotificationServiceClient> mockService;
         IMetricsClient mockClient;
         ConversationController myController;
 
@@ -29,7 +29,7 @@ namespace ChatService.FunctionalTests.Controllers
         {
             mockStore = new Mock<IConversationStore>();
             mockLogger = new Mock<ILogger<ConversationController>>();
-            mockService= new Mock<INotificationService>();
+            mockService= new Mock<INotificationServiceClient>();
             mockClient = TestUtils.GenerateClient();
             myController = new ConversationController(mockStore.Object, mockLogger.Object,mockClient,mockService.Object);
         }
@@ -73,7 +73,7 @@ namespace ChatService.FunctionalTests.Controllers
         [TestMethod]
         public async Task AddMessageReturns500IfNotificationServiceDown()
         {
-            mockService.Setup(service => service.SendNotification(It.IsAny<string>(), It.IsAny<Payload>()))
+            mockService.Setup(service => service.SendNotification(It.IsAny<NotificationDto>()))
                 .ThrowsAsync(new ChatServiceException("test", "test", new HttpStatusCode()));
             AddMessageDto messageDto = new AddMessageDto("Hi!", "amansour");
             TestUtils.AssertStatusCode(HttpStatusCode.InternalServerError, await myController.Post("amansour_nbilal", messageDto));

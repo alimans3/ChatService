@@ -56,7 +56,7 @@ namespace ChatService.FunctionalTests.Utils
             if (serviceUri == null)
             {
                 var builder = WebHost.CreateDefaultBuilder().UseStartup<Startup>().ConfigureTestServices(s =>
-                    s.AddSingleton<INotificationService>(new Mock<INotificationService>().Object));
+                    s.AddSingleton<INotificationServiceClient>(new Mock<INotificationServiceClient>().Object));
                 var server = new TestServer(builder);
                 return new ChatServiceClient(server.CreateClient());
             }

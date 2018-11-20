@@ -10,6 +10,7 @@ using ChatService.DataContracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Metrics;
+using Newtonsoft.Json;
 
 namespace ChatService.Controllers
 {
@@ -20,12 +21,12 @@ namespace ChatService.Controllers
         private readonly IConversationStore store;
         private readonly ILogger<ConversationsController> logger;
         private readonly IProfileStore profileStore;
-        private readonly INotificationService notificationService;
+        private readonly INotificationServiceClient notificationService;
         private readonly AggregateMetric PostConversationMetric;
         private readonly AggregateMetric GetConversationMetric;
 
         public ConversationsController(IConversationStore store, IMetricsClient client,
-            ILogger<ConversationsController> logger, IProfileStore profileStore,INotificationService notificationService)
+            ILogger<ConversationsController> logger, IProfileStore profileStore,INotificationServiceClient notificationService)
         {
             this.store = store;
             this.logger = logger;
@@ -96,6 +97,7 @@ namespace ChatService.Controllers
                     logger.LogInformation(Events.ConversationCreated,
                         $"Conversation of Participants {conversationDto.Participants[0]} " +
                         $"and {conversationDto.Participants[1]} was created", DateTime.UtcNow);
+                    CreateConversationPayloadAndSend(conversation);
                     var GetConversationDto = new GetConversationDto(conversation);
                     return Ok(GetConversationDto);
                 }
@@ -143,12 +145,14 @@ namespace ChatService.Controllers
 
             return $"/api/conversations/{username}?endCt={endCt}&limit={limit}";
         }
-        
+
         private async Task CreateConversationPayloadAndSend(Conversation conversation)
         {
-                var payload = new Payload(Payload.ConversationType,conversation.Id,conversation.LastModifiedDateUtc);
-                await notificationService.SendNotification(conversation.Participants[0], payload);
-                await notificationService.SendNotification(conversation.Participants[1], payload);
+            var notification = new ConversationAddedNotification(conversation.Id, conversation.LastModifiedDateUtc);
+            var notificationDto =
+                new NotificationDto(conversation.Participants, JsonConvert.SerializeObject(notification));
+
+            await notificationService.SendNotification(notificationDto);
         }
     }
 }

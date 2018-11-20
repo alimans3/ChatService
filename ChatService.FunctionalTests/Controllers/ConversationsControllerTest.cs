@@ -22,7 +22,7 @@ namespace ChatService.FunctionalTests.Controllers
         Mock<IConversationStore> mockStore;
         private Mock<IProfileStore> profileStore;
         Mock<ILogger<ConversationsController>> mockLogger;
-        Mock<INotificationService> mockService;
+        Mock<INotificationServiceClient> mockService;
         private IMetricsClient mockClient;
         ConversationsController myController;
 
@@ -31,7 +31,7 @@ namespace ChatService.FunctionalTests.Controllers
         {
             mockStore = new Mock<IConversationStore>();
             mockLogger = new Mock<ILogger<ConversationsController>>();
-            mockService = new Mock<INotificationService>();
+            mockService = new Mock<INotificationServiceClient>();
             profileStore=new Mock<IProfileStore>();
             mockClient = TestUtils.GenerateClient();
             myController = new ConversationsController(mockStore.Object, mockClient, mockLogger.Object,
@@ -84,7 +84,7 @@ namespace ChatService.FunctionalTests.Controllers
         [TestMethod]
         public async Task AddConversationReturns500IfNotificationServiceDown()
         {
-            mockService.Setup(service => service.SendNotification(It.IsAny<string>(), It.IsAny<Payload>()))
+            mockService.Setup(service => service.SendNotification(It.IsAny<NotificationDto>()))
                 .ThrowsAsync(new ChatServiceException("test", "test", new HttpStatusCode()));
             AddConversationDto conversationDto = new AddConversationDto
             {
