@@ -8,4 +8,8 @@
       <ProjectReference Include="..\ChatService.DataContracts\ChatService.DataContracts.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Azure.ServiceBus" Version="3.1.1" />
+    </ItemGroup>
+
 </Project>

@@ -1,10 +1,12 @@
 ﻿using System;
 using ChatService.Client;
+using ChatService.Core;
 using ChatService.Core.Storage;
 using ChatService.Core.Storage.Azure;
 using ChatService.Core.Storage.Metrics;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.Azure.ServiceBus;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -25,10 +27,8 @@ namespace ChatService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddOptions();
-
-            var notificationServiceUri = Configuration.GetSection("Microservices")["NotificationServiceUri"];
-            var notificationService = new NotificationServiceClient(new Uri(notificationServiceUri));
-            var azureStorageSettings = GetStorageSettings();
+            var azureStorageSettings = GetSettings<AzureStorageSettings>(Configuration);
+            var azureServiceBusSettings = GetSettings<AzureServiceBusSettings>(Configuration);
 
             var profileCloudTable = new AzureCloudTable(azureStorageSettings.ConnectionString, azureStorageSettings.ProfilesTableName);
             var profileStore = new AzureTableProfileStore(profileCloudTable);
@@ -36,7 +36,9 @@ namespace ChatService
             var userConversationsCloudTable = new AzureCloudTable(azureStorageSettings.ConnectionString, azureStorageSettings.UserConversationsTable);
             var conversationStore = new AzureConversationStore(messagesCloudTable,userConversationsCloudTable);
 
-            services.AddSingleton<INotificationServiceClient>(notificationService);
+            services.AddSingleton<IQueueClient>(new QueueClient(azureServiceBusSettings.ConnectionString,
+                azureServiceBusSettings.QueueName));
+            services.AddSingleton<INotificationServiceClient,NotificationServiceBusClient>();
             services.AddSingleton<IMetricsClient>(context =>
             {
                 var metricsClientFactory = new MetricsClientFactory(context.GetRequiredService<ILoggerFactory>(),
@@ -63,14 +65,13 @@ namespace ChatService
 
             app.UseMvc();
         }
-
-
-        private AzureStorageSettings GetStorageSettings()
+        
+        public static T GetSettings<T>(IConfiguration configuration) where T : new()
         {
-            IConfiguration storageConfiguration = Configuration.GetSection("AzureStorageSettings");
-            AzureStorageSettings storageSettings = new AzureStorageSettings();
-            storageConfiguration.Bind(storageSettings);
-            return storageSettings;
+            var config = configuration.GetSection(typeof(T).Name);
+            T settings = new T();
+            config.Bind(settings);
+            return settings;
         }
     }
 }
