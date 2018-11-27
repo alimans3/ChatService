@@ -315,7 +315,6 @@ namespace ChatService.Core.Storage.Azure
                     new Conversation(entity.Id, new List<string> {entity.PartitionKey, entity.Recipient},
                         ConversationUtils.ParseDateTime(entity.RowKey)));
                 var conversations = new List<Conversation>(entities.ConvertAll(converter));
-                ResultConversations result;
 
                 if (conversations.Count == 0)
                 {

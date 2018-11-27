@@ -97,7 +97,7 @@ namespace ChatService.Controllers
                     logger.LogInformation(Events.ConversationCreated,
                         $"Conversation of Participants {conversationDto.Participants[0]} " +
                         $"and {conversationDto.Participants[1]} was created", DateTime.UtcNow);
-                    CreateConversationPayloadAndSend(conversation);
+                    await CreateConversationPayloadAndSend(conversation);
                     var GetConversationDto = new GetConversationDto(conversation);
                     return Ok(GetConversationDto);
                 }
