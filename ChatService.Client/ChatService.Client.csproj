@@ -5,6 +5,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\ChatService.Core\ChatService.Core.csproj" />
       <ProjectReference Include="..\ChatService.DataContracts\ChatService.DataContracts.csproj" />
     </ItemGroup>
 

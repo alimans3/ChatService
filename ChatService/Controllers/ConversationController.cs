@@ -13,10 +13,10 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Metrics;
 using Newtonsoft.Json;
 
-namespace ChatService.Controllers
+namespace ChatService.Controllers    
 {
     [Route("api/[controller]")]
-    public class ConversationController : Controller
+    public class ConversationController : Controller  
     {
         private readonly IConversationStore store;
         private readonly ILogger<ConversationController> logger;

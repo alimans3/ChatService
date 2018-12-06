@@ -15,7 +15,7 @@ using Newtonsoft.Json;
 namespace ChatService.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController]
+    [ApiController] 
     public class ConversationsController : Controller
     {
         private readonly IConversationStore store;
@@ -63,7 +63,7 @@ namespace ChatService.Controllers
                         previousUri);
                 return Ok(conversationsDto);
             }
-            catch (StorageUnavailableException e)
+            catch (StorageUnavailableException e) 
             {
                 logger.LogError(Events.StorageError, e,
                     $"Storage was not available to obtain list of conversations for {username}", DateTime.UtcNow);

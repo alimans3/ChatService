@@ -1,9 +1,12 @@
 ﻿using System;
 using ChatService.Client;
+using ChatService.Client.Notifications;
 using ChatService.Core;
+using ChatService.Core.Exceptions;
 using ChatService.Core.Storage;
 using ChatService.Core.Storage.Azure;
 using ChatService.Core.Storage.Metrics;
+using ChatService.Core.Storage.Polly;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Azure.ServiceBus;
@@ -11,13 +14,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Metrics;
+using Polly;
 
 namespace ChatService
 {
-    public class Startup
+    public class Startup 
     {
         public Startup(IConfiguration configuration)
-        {
+        { 
             Configuration = configuration;
         }
 
@@ -29,6 +33,7 @@ namespace ChatService
             services.AddOptions();
             var azureStorageSettings = GetSettings<AzureStorageSettings>(Configuration);
             var azureServiceBusSettings = GetSettings<AzureServiceBusSettings>(Configuration);
+            var resiliencyParameters = GetSettings<ResiliencyParameters>(Configuration);
 
             var profileCloudTable = new AzureCloudTable(azureStorageSettings.ConnectionString, azureStorageSettings.ProfilesTableName);
             var profileStore = new AzureTableProfileStore(profileCloudTable);
@@ -38,17 +43,31 @@ namespace ChatService
 
             services.AddSingleton<IQueueClient>(new QueueClient(azureServiceBusSettings.ConnectionString,
                 azureServiceBusSettings.QueueName));
-            services.AddSingleton<INotificationServiceClient,NotificationServiceBusClient>();
+
+         
+
+            services.AddSingleton<INotificationServiceClient>(context =>
+                 new NotificationClientResiliencyDecorator(
+                    new NotificationServiceBusClient(context.GetRequiredService<IQueueClient>()),
+                    new PollyResiliencyPolicy<Exception>(resiliencyParameters)));
+
             services.AddSingleton<IMetricsClient>(context =>
             {
                 var metricsClientFactory = new MetricsClientFactory(context.GetRequiredService<ILoggerFactory>(),
                     TimeSpan.FromSeconds(15));
                 return metricsClientFactory.CreateMetricsClient<LoggerMetricsClient>();
             });
+
             services.AddSingleton<IProfileStore>(context =>
-                new ProfileStoreMetricDecorator(profileStore, context.GetRequiredService<IMetricsClient>()));
+                new ProfileStoreResiliencyDecorator(
+                new ProfileStoreMetricDecorator(profileStore, context.GetRequiredService<IMetricsClient>()),
+                    new PollyResiliencyPolicy<StorageErrorException>(resiliencyParameters)));
+
             services.AddSingleton<IConversationStore>(context =>
-                new ConversationStoreMetricDecorator(conversationStore, context.GetRequiredService<IMetricsClient>()));
+                new ConversationStoreResiliencyDecorator(
+                new ConversationStoreMetricDecorator(conversationStore, context.GetRequiredService<IMetricsClient>()),
+                    new PollyResiliencyPolicy<StorageUnavailableException>(resiliencyParameters)));
+
             services.AddLogging();
             services.AddMvc();
         }

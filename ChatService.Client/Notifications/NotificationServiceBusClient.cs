@@ -1,5 +1,7 @@
+using System;
 using System.Text;
 using System.Threading.Tasks;
+using ChatService.Core.Exceptions;
 using ChatService.DataContracts;
 using Microsoft.Azure.ServiceBus;
 using Newtonsoft.Json;
@@ -19,7 +21,9 @@ namespace ChatService.Client
         {
             var bytes = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(payload));
             var message = new Microsoft.Azure.ServiceBus.Message(bytes);
+           
             await client.SendAsync(message);
+            
         }
     }
 }
